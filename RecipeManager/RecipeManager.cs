@@ -17,5 +17,6 @@ namespace RecipeManager
         public List<Recipe> FilterByCategory(string categoryName) => Recipes.Where(r => r.Category.Name.Equals(categoryName, StringComparison.OrdinalIgnoreCase)).ToList();
         public List<Recipe> SortByName() => Recipes.OrderBy(r => r.Name).ToList();
         public List<Recipe> SortByRating() => Recipes.OrderByDescending(r => r.GetAverageRating()).ToList();
+        public List<Category> GetCategories() => Recipes.Select(r => r.Category).Distinct().ToList();
     }
 }

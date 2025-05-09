@@ -8,207 +8,175 @@ namespace RecipeManager
 {
     public class RecipeUI
     {
-        public RecipeUI(RecipeManager recipeManager)
+        private RecipeManager _manager;
+        private ShoppingList _shoppingList;
+        private MealPlanner _mealPlanner;
+        private RecipeManager recipeManager;
+
+        public RecipeUI(RecipeManager manager, ShoppingList shoppingList, MealPlanner mealPlanner)
         {
-            RecipeManager = recipeManager;
+            _manager = manager;
+            _shoppingList = shoppingList;
+            _mealPlanner = mealPlanner;
         }
 
-        public RecipeManager RecipeManager { get; }
+        public RecipeUI(RecipeManager recipeManager)
+        {
+            this.recipeManager = recipeManager;
+        }
 
-        public static void ShowMainMenu(List<Recipe> recipes)
+        public void Run()
         {
             while (true)
             {
-                Console.Clear();
-                Console.WriteLine("🍽 Recipe Management System 🍽");
-                Console.WriteLine("1. View All Recipes");
-                Console.WriteLine("2. Search Recipes");
-                Console.WriteLine("3. Filter Recipes by Category");
-                Console.WriteLine("4. Sort Recipes");
-                Console.WriteLine("5. Exit");
+                Console.WriteLine("\nRecipe App Menu:");
+                Console.WriteLine("1. List Recipes");
+                Console.WriteLine("2. Filter by Category");
+                Console.WriteLine("3. Sort by Name");
+                Console.WriteLine("4. Sort by Rating");
+                Console.WriteLine("5. Search Recipes");
+                Console.WriteLine("6. View Shopping List");
+                Console.WriteLine("7. View Meal Plan");
+                Console.WriteLine("8. Exit");
                 Console.Write("Select an option: ");
 
-                string choice = Console.ReadLine();
-                switch (choice)
+                var input = Console.ReadLine();
+                Console.WriteLine();
+
+                switch (input)
                 {
                     case "1":
-                        DisplayAllRecipes(recipes);
+                        DisplayRecipes(_manager.Recipes);
                         break;
                     case "2":
-                        SearchRecipes(recipes);
+                        SelectCategory();
                         break;
                     case "3":
-                        FilterRecipesByCategory(recipes);
+                        DisplayRecipes(_manager.SortByName());
                         break;
                     case "4":
-                        SortRecipes(recipes);
+                        DisplayRecipes(_manager.SortByRating());
                         break;
                     case "5":
+                        SearchRecipes();
+                        break;
+                    case "6":
+                        ViewShoppingList();
+                        break;
+                    case "7":
+                        ViewMealPlan();
+                        break;
+                    case "8":
                         return;
                     default:
-                        Console.WriteLine("Invalid choice. Press any key to try again...");
-                        Console.ReadKey();
+                        Console.WriteLine("Invalid option.");
                         break;
                 }
             }
         }
 
-        public static void DisplayAllRecipes(List<Recipe> recipes)
+        private void DisplayRecipes(List<Recipe> recipes)
         {
-            Console.Clear();
-            Console.WriteLine("🍽 Recipe List:");
             if (recipes.Count == 0)
             {
-                Console.WriteLine("No recipes available.");
-                Console.ReadKey();
+                Console.WriteLine("No recipes found.");
                 return;
             }
 
-            for (int i = 0; i < recipes.Count; i++)
+            int index = 1;
+            foreach (var recipe in recipes)
             {
-                Console.WriteLine($"{i + 1}. {recipes[i].Name} ({recipes[i].Category.GetCategoryName()})");
-            }
-
-            Console.Write("\nEnter the number of a recipe to view details, or press Enter to return: ");
-            string input = Console.ReadLine();
-            if (int.TryParse(input, out int index) && index > 0 && index <= recipes.Count)
-            {
-                DisplayRecipe(recipes[index - 1]);
+                Console.WriteLine($"{index++}. {recipe.Name} ({recipe.Category.GetCategoryName()})");
+                Console.WriteLine($"   Average Rating: {recipe.GetAverageRating():0.0} ({recipe.Ratings.Count} rating{(recipe.Ratings.Count == 1 ? "" : "s")})");
+                Console.WriteLine($"   Instructions: {recipe.Instructions}");
+                Console.WriteLine();
             }
         }
 
-        public static void DisplayRecipe(Recipe recipe)
+        private void SelectCategory()
         {
-            Console.Clear();
-            Console.WriteLine("========================================");
-            Console.WriteLine($"📌 Recipe: {recipe.Name}");
-            Console.WriteLine($"📂 Category: {recipe.Category.GetCategoryName()}");
-            Console.WriteLine("🥕 Ingredients:");
-            foreach (var ingredient in recipe.Ingredients)
-            {
-                Console.WriteLine($"   - {ingredient.GetFormattedIngredient()}");
-            }
-            Console.WriteLine("\n📜 Instructions:");
-            Console.WriteLine($"{recipe.Instructions}");
-
-            Console.WriteLine("\n⭐ Ratings:");
-            if (recipe.Ratings.Count > 0)
-            {
-                foreach (var rating in recipe.Ratings)
-                {
-                    Console.WriteLine($"   - {rating.GetRatingDetails()}");
-                }
-                Console.WriteLine($"🔢 Average Rating: {recipe.GetAverageRating():0.0}/5");
-            }
-            else
-            {
-                Console.WriteLine("   No ratings yet.");
-            }
-
-            Console.WriteLine("\n🍿 Tags:");
-            Console.WriteLine(recipe.Tags.Count > 0 ? string.Join(", ", recipe.Tags.Select(tag => tag.GetTagName())) : "   No tags.");
-
-            Console.WriteLine("\n💬 Comments:");
-            if (recipe.Comments.Count > 0)
-            {
-                foreach (var comment in recipe.Comments)
-                {
-                    Console.WriteLine($"   - {comment.GetCommentDetails()}");
-                }
-            }
-            else
-            {
-                Console.WriteLine("   No comments yet.");
-            }
-
-            Console.WriteLine("========================================\n");
-            Console.WriteLine("Press any key to return...");
-            Console.ReadKey();
-        }
-
-        public static void SearchRecipes(List<Recipe> recipes)
-        {
-            Console.Clear();
-            Console.Write("🔍 Enter search term: ");
-            string query = Console.ReadLine().ToLower();
-
-            var results = recipes.Where(r => r.Name.ToLower().Contains(query) || r.Tags.Any(t => t.GetTagName().ToLower().Contains(query))).ToList();
-
-            if (results.Count == 0)
-            {
-                Console.WriteLine("No recipes found.");
-            }
-            else
-            {
-                DisplayAllRecipes(results);
-            }
-        }
-
-        public static void FilterRecipesByCategory(List<Recipe> recipes)
-        {
-            Console.Clear();
-            var categories = recipes.Select(r => r.Category.GetCategoryName()).Distinct().ToList();
-
-            Console.WriteLine("📂 Available Categories:");
+            var categories = _manager.Recipes.Select(r => r.Category.Name).Distinct().ToList();
             for (int i = 0; i < categories.Count; i++)
             {
                 Console.WriteLine($"{i + 1}. {categories[i]}");
             }
 
-            Console.Write("\nSelect a category by number: ");
-            if (int.TryParse(Console.ReadLine(), out int index) && index > 0 && index <= categories.Count)
+            Console.Write("Select a category number: ");
+            if (int.TryParse(Console.ReadLine(), out int selected) && selected > 0 && selected <= categories.Count)
             {
-                string selectedCategory = categories[index - 1];
-                var filteredRecipes = recipes.Where(r => r.Category.GetCategoryName() == selectedCategory).ToList();
-                DisplayAllRecipes(filteredRecipes);
+                string category = categories[selected - 1];
+                var filtered = _manager.FilterByCategory(category);
+                DisplayRecipes(filtered);
             }
             else
             {
-                Console.WriteLine("Invalid selection. Press any key to return...");
-                Console.ReadKey();
+                Console.WriteLine("Invalid selection.");
             }
         }
 
-        public static void SortRecipes(List<Recipe> recipes)
+        private void SearchRecipes()
         {
-            Console.Clear();
-            Console.WriteLine("📊 Sort Recipes By:");
-            Console.WriteLine("1. Name (A-Z)");
-            Console.WriteLine("2. Name (Z-A)");
-            Console.WriteLine("3. Highest Rated");
-            Console.WriteLine("4. Lowest Rated");
-
-            Console.Write("\nSelect an option: ");
-            string choice = Console.ReadLine();
-
-            List<Recipe> sortedRecipes = recipes;
-            switch (choice)
+            Console.Write("Enter search keyword: ");
+            string keyword = Console.ReadLine();
+            var results = _manager.SearchRecipe(keyword);
+            if (results.Count == 0)
             {
-                case "1":
-                    sortedRecipes = recipes.OrderBy(r => r.Name).ToList();
-                    break;
-                case "2":
-                    sortedRecipes = recipes.OrderByDescending(r => r.Name).ToList();
-                    break;
-                case "3":
-                    sortedRecipes = recipes.OrderByDescending(r => r.GetAverageRating()).ToList();
-                    break;
-                case "4":
-                    sortedRecipes = recipes.OrderBy(r => r.GetAverageRating()).ToList();
-                    break;
-                default:
-                    Console.WriteLine("Invalid option. Press any key to return...");
-                    Console.ReadKey();
-                    return;
+                Console.WriteLine("No recipes found.");
+                return;
             }
 
-            DisplayAllRecipes(sortedRecipes);
+            for (int i = 0; i < results.Count; i++)
+            {
+                Console.WriteLine($"{i + 1}. {results[i].Name} ({results[i].Category.GetCategoryName()}) | Avg Rating: {results[i].GetAverageRating():0.0}");
+            }
+
+            Console.Write("Select a recipe number to view ingredients (or press Enter to skip): ");
+            var input = Console.ReadLine();
+            if (int.TryParse(input, out int choice) && choice >= 1 && choice <= results.Count)
+            {
+                var selectedRecipe = results[choice - 1];
+                Console.WriteLine($"\nIngredients for {selectedRecipe.Name}:");
+                foreach (var ingredient in selectedRecipe.Ingredients)
+                {
+                    Console.WriteLine($"- {ingredient.GetFormattedIngredient()}");
+                }
+
+                Console.Write("\nAdd ingredients to shopping list? (y/n): ");
+                if (Console.ReadLine().ToLower() == "y")
+                {
+                    _shoppingList.AddIngredients(selectedRecipe.Ingredients);
+                    Console.WriteLine("Ingredients added to shopping list.");
+                }
+
+                Console.Write("Add recipe to meal planner? (y/n): ");
+                if (Console.ReadLine().ToLower() == "y")
+                {
+                    _mealPlanner.AddRecipe(selectedRecipe);
+                    Console.WriteLine("Recipe added to meal planner.");
+                }
+            }
         }
 
-        internal void Run()
+        private void ViewShoppingList()
         {
-            throw new NotImplementedException();
+            var list = _shoppingList.GetList();
+            if (list.Count == 0)
+            {
+                Console.WriteLine("Shopping list is empty.");
+            }
+            else
+            {
+                Console.WriteLine("Shopping List:");
+                foreach (var item in list)
+                {
+                    Console.WriteLine($"- {item.GetFormattedIngredient()}");
+                }
+            }
+        }
+
+        private void ViewMealPlan()
+        {
+            Console.WriteLine(_mealPlanner.PlanMeal());
         }
     }
-
 }

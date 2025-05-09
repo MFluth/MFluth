@@ -43,8 +43,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Category.cs" />
+    <Compile Include="Comment.cs" />
+    <Compile Include="DatabaseHandler.cs" />
+    <Compile Include="FavoritesManager.cs" />
+    <Compile Include="Ingredient.cs" />
+    <Compile Include="MealPlanner.cs" />
+    <Compile Include="MeasurementUnit.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Rating.cs" />
+    <Compile Include="Recipe.cs" />
+    <Compile Include="RecipeManager.cs" />
+    <Compile Include="RecipeUI.cs" />
+    <Compile Include="SampleDataLoader.cs" />
+    <Compile Include="ShoppingList.cs" />
+    <Compile Include="Tag.cs" />
+    <Compile Include="User.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
